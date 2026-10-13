@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "CadeMinhaVaga",
-    "slug": "CadeMinhaVaga",
+    "name": "Cadê Minha Vaga",
+    "slug": "cade-minha-vaga",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -10,6 +10,10 @@
       "supportsTablet": true
     },
     "android": {
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -19,6 +23,15 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-sqlite",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "O \"Cadê Minha Vaga\" usa sua localização para registrar onde você estacionou e guiar você de volta até o carro."
+        }
+      ]
+    ]
   }
 }
