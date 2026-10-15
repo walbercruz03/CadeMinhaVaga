@@ -2,7 +2,7 @@
  * Tela inicial - cartão de status da vaga + botões bem visíveis
  * para SALVAR VAGA e VER ROTA.
  */
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import parkingController, {
   formatDistance,
@@ -22,7 +22,7 @@ function formatDate(value) {
 }
 
 export default function HomeScreen({ navigation }) {
-  const { currentLocation, latestSpot, distanceMeters, permissionStatus, spots, error } =
+  const { currentLocation, latestSpot, distanceMeters, permissionStatus, canAskAgain, spots, error } =
     useParkingState();
   const permissionDenied = permissionStatus === 'denied';
 
@@ -50,13 +50,23 @@ export default function HomeScreen({ navigation }) {
         <View style={[styles.card, styles.warningCard]}>
           <Text style={styles.cardTitle}>📍 Localização desativada</Text>
           <Text style={styles.cardText}>
-            Permita o acesso ao GPS para salvar sua vaga e calcular a rota até o carro.
+            {canAskAgain
+              ? 'Permita o acesso ao GPS para salvar sua vaga e calcular a rota até o carro.'
+              : 'O acesso à localização foi bloqueado. Libere a permissão nas configurações do app para continuar.'}
           </Text>
+          {canAskAgain ? (
+            <BigButton
+              title="PERMITIR LOCALIZAÇÃO"
+              icon="✅"
+              color={colors.warning}
+              onPress={() => parkingController.requestAccess()}
+            />
+          ) : null}
           <BigButton
-            title="PERMITIR LOCALIZAÇÃO"
-            icon="✅"
-            color={colors.warning}
-            onPress={() => parkingController.requestAccess()}
+            title="ABRIR AJUSTES DO APARELHO"
+            icon="⚙️"
+            color={colors.primaryDark}
+            onPress={() => Linking.openSettings().catch(() => null)}
           />
         </View>
       ) : null}

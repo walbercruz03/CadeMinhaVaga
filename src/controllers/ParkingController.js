@@ -20,6 +20,7 @@ const initialState = {
   loading: false,
   error: null,
   permissionStatus: 'undetermined',
+  canAskAgain: true,
   currentLocation: null,
   spots: [],
   latestSpot: null,
@@ -55,17 +56,18 @@ class ParkingController {
     this.setState({ loading: true, error: null });
     try {
       await initializeDatabase();
-      const permissionStatus = await LocationController.requestPermission();
+      const permission = await LocationController.requestPermission();
       const spots = await ParkingModel.findAll();
       this.setState({
-        permissionStatus,
+        permissionStatus: permission.status,
+        canAskAgain: permission.canAskAgain,
         spots,
         latestSpot: spots[0] ?? null,
         loading: false,
         isReady: true,
       });
 
-      if (permissionStatus === 'granted') {
+      if (permission.granted) {
         await this.refreshLocation();
         await this.startWatching();
       }
@@ -82,13 +84,16 @@ class ParkingController {
 
   /** Requisita permissão de novo e liga o GPS se concedida. */
   async requestAccess() {
-    const permissionStatus = await LocationController.requestPermission();
-    this.setState({ permissionStatus });
-    if (permissionStatus === 'granted') {
+    const permission = await LocationController.requestPermission();
+    this.setState({
+      permissionStatus: permission.status,
+      canAskAgain: permission.canAskAgain,
+    });
+    if (permission.granted) {
       await this.refreshLocation();
       await this.startWatching();
     }
-    return permissionStatus;
+    return permission.status;
   }
 
   /** Atualiza a posição atual do usuário (uma vez). Retorna null se falhar. */

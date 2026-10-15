@@ -21,7 +21,7 @@ import BigButton from './components/BigButton';
 import { colors, shadows } from './theme';
 
 export default function SaveSpotScreen({ navigation }) {
-  const { currentLocation, permissionStatus, loading, latestSpot, error } = useParkingState();
+  const { currentLocation, permissionStatus, canAskAgain, loading, latestSpot, error } = useParkingState();
   const [label, setLabel] = useState('Minha vaga');
   const [marker, setMarker] = useState(currentLocation);
   const [markerTouched, setMarkerTouched] = useState(false);
@@ -112,14 +112,18 @@ export default function SaveSpotScreen({ navigation }) {
         {permissionDenied ? (
           <View style={styles.deniedBox}>
             <Text style={styles.deniedText}>
-              Localização bloqueada. Ative a permissão nas configurações ou use o botão abaixo.
+              {canAskAgain
+                ? 'Localização bloqueada. Toque no botão abaixo para permitir o acesso ao GPS.'
+                : 'Localização bloqueada. Libere a permissão nas configurações do aparelho para continuar.'}
             </Text>
-            <BigButton
-              title="PERMITIR LOCALIZAÇÃO"
-              icon="✅"
-              color={colors.warning}
-              onPress={() => parkingController.requestAccess()}
-            />
+            {canAskAgain ? (
+              <BigButton
+                title="PERMITIR LOCALIZAÇÃO"
+                icon="✅"
+                color={colors.warning}
+                onPress={() => parkingController.requestAccess()}
+              />
+            ) : null}
             <BigButton
               title="ABRIR AJUSTES DO APARELHO"
               icon="⚙️"

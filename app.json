@@ -19,7 +19,8 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "package": "com.walbercruz03.cademinhavaga"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -32,6 +33,12 @@
           "locationWhenInUsePermission": "O \"Cadê Minha Vaga\" usa sua localização para registrar onde você estacionou e guiar você de volta até o carro."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "2dd9aec5-10ce-40e1-97c2-e5b51ba8e250"
+      }
+    },
+    "owner": "walbercruz03"
   }
 }

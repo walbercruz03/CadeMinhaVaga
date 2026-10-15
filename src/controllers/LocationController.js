@@ -25,12 +25,31 @@ export const LocationController = {
     return status;
   },
 
-  /** Solicita a permissão de localização (só pergunta se ainda não decidiu). */
+  /**
+   * Solicita a permissão de localização em primeiro plano.
+   *
+   * Importante: não basta checar o status. Depois de uma recusa, o Android ainda
+   * permite reperguntar (canAskAgain === true) — mas o código antigo retornava
+   * 'denied' imediatamente e o botão "PERMITIR LOCALIZAÇÃO" deixava de funcionar.
+   *
+   * Agora sempre chamamos requestForegroundPermissionsAsync() enquanto a
+   * permissão não foi concedida. Quando o sistema não deixa mais perguntar
+   * (canAskAgain === false), ele retorna 'denied' na hora e o app deve levar o
+   * usuário aos Ajustes do aparelho.
+   *
+   * @returns {Promise<{status: string, granted: boolean, canAskAgain: boolean}>}
+   */
   async requestPermission() {
-    const current = await this.getPermissionStatus();
-    if (current === 'granted' || current === 'denied') return current;
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    return status;
+    const current = await Location.getForegroundPermissionsAsync();
+    if (current.granted) {
+      return { status: current.status, granted: true, canAskAgain: true };
+    }
+    const permission = await Location.requestForegroundPermissionsAsync();
+    return {
+      status: permission.status,
+      granted: permission.granted,
+      canAskAgain: permission.canAskAgain,
+    };
   },
 
   /**
