@@ -1,8 +1,10 @@
 /**
  * Tela de salvar vaga - mapa centrado no usuário, marcador ajustável
  * (toque no mapa) e botão gigante "SALVAR VAGA".
+ *
+ * Mapa: MapLibre + OpenStreetMap (gratuito, sem API key).
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -13,12 +15,18 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import {
+  Camera,
+  Map,
+  Marker,
+  NativeUserLocation,
+} from '@maplibre/maplibre-react-native';
 
 import parkingController, { useParkingState } from '../controllers/ParkingController';
-import LocationController from '../controllers/LocationController';
 import BigButton from './components/BigButton';
+import MapPin from './components/MapPin';
 import { colors, shadows } from './theme';
+import { DEFAULT_CENTER, OSM_MAP_STYLE, SPOT_ZOOM } from './mapStyle';
 
 export default function SaveSpotScreen({ navigation }) {
   const { currentLocation, permissionStatus, canAskAgain, loading, latestSpot, error } = useParkingState();
@@ -26,17 +34,26 @@ export default function SaveSpotScreen({ navigation }) {
   const [marker, setMarker] = useState(currentLocation);
   const [markerTouched, setMarkerTouched] = useState(false);
   const [locating, setLocating] = useState(false);
-  const mapRef = useRef(null);
+  // Centro da câmera: só muda quando o GPS chega / "minha localização" -
+  // tocar no mapa move apenas o marcador, sem puxar a câmera.
+  const [cameraCenter, setCameraCenter] = useState(null);
+
+  // Região inicial sempre definida (GPS ou centro do Brasil como fallback).
+  const initialCenter = useMemo(() => {
+    const coord = cameraCenter ?? currentLocation ?? DEFAULT_CENTER;
+    return [coord.longitude, coord.latitude];
+  }, [cameraCenter, currentLocation]);
 
   // Ao receber a primeira posição, centraliza o mapa (se o usuário não mexeu).
   useEffect(() => {
     if (!currentLocation || markerTouched || marker) return;
     setMarker(currentLocation);
-    mapRef.current?.animateToRegion(LocationController.buildRegion(currentLocation), 400);
+    setCameraCenter(currentLocation);
   }, [currentLocation, markerTouched, marker]);
 
   const handleMapPress = (event) => {
-    setMarker(event.nativeEvent.coordinate);
+    const [longitude, latitude] = event.nativeEvent.lngLat;
+    setMarker({ latitude, longitude });
     setMarkerTouched(true);
   };
 
@@ -47,7 +64,7 @@ export default function SaveSpotScreen({ navigation }) {
       if (coord) {
         setMarker(coord);
         setMarkerTouched(false);
-        mapRef.current?.animateToRegion(LocationController.buildRegion(coord), 400);
+        setCameraCenter(coord);
         return;
       }
       // Falhou: mostra o motivo exato vindo do controller (permissão, GPS, provedor...)
@@ -81,32 +98,28 @@ export default function SaveSpotScreen({ navigation }) {
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <MapView
-        ref={mapRef}
-        style={styles.map}
-        initialRegion={LocationController.buildRegion(currentLocation) ?? undefined}
-        onPress={handleMapPress}
-        showsUserLocation={permissionStatus === 'granted'}
-        showsMyLocationButton={false}
-      >
+      <Map style={styles.map} mapStyle={OSM_MAP_STYLE} onPress={handleMapPress}>
+        <Camera center={initialCenter} zoom={SPOT_ZOOM} duration={400} />
+        {permissionStatus === 'granted' ? <NativeUserLocation /> : null}
         {marker ? (
           <Marker
-            coordinate={marker}
-            title="Sua vaga"
-            description={label || 'Minha vaga'}
-            draggable
-            onDragEnd={(e) => {
-              setMarker(e.nativeEvent.coordinate);
-              setMarkerTouched(true);
-            }}
-          />
+            lngLat={[marker.longitude, marker.latitude]}
+            anchor="bottom"
+          >
+            <View style={styles.markerBox}>
+              <MapPin emoji="🅿️" color={colors.danger} />
+              <Text numberOfLines={1} style={styles.markerLabel}>
+                {label || 'Minha vaga'}
+              </Text>
+            </View>
+          </Marker>
         ) : null}
-      </MapView>
+      </Map>
 
       <View style={styles.panel}>
         <Text style={styles.panelTitle}>Onde você estacionou?</Text>
         <Text style={styles.hint}>
-          Toque no mapa (ou arraste o marcador) para ajustar o ponto exato da vaga.
+          Toque no mapa para ajustar o ponto exato da vaga.
         </Text>
 
         {permissionDenied ? (
@@ -182,6 +195,22 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
+  },
+  markerBox: {
+    alignItems: 'center',
+  },
+  markerLabel: {
+    marginTop: 2,
+    maxWidth: 140,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    backgroundColor: colors.card,
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.text,
+    textAlign: 'center',
+    overflow: 'hidden',
   },
   panel: {
     backgroundColor: colors.card,

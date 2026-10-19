@@ -12,7 +12,9 @@
     "android": {
       "permissions": [
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
+        "ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -32,13 +34,14 @@
         {
           "locationWhenInUsePermission": "O \"Cadê Minha Vaga\" usa sua localização para registrar onde você estacionou e guiar você de volta até o carro."
         }
-      ]
+      ],
+      "@maplibre/maplibre-react-native"
     ],
+    "owner": "walbercruz03",
     "extra": {
       "eas": {
-        "projectId": "2dd9aec5-10ce-40e1-97c2-e5b51ba8e250"
+        "projectId": "daeb7ef2-3c7a-4900-86d5-9248d6eb2476"
       }
-    },
-    "owner": "walbercruz03"
+    }
   }
 }
